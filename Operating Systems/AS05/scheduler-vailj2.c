@@ -4,7 +4,7 @@
                 management system calls that acts like a shell. This is the
                 second assignemnt where we use POSIX threads to create worker
                 threads. This program was extended to include scheduling of threads.
-   Compile: gcc -o scheduler scheduler-vailj2.c LinkedList.c
+   Compile: gcc -pthread -o scheduler scheduler-vailj2.c LinkedList.c
    Run: ./thread
 */
 #include <stdio.h>
