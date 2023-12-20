@@ -1,0 +1,30 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Xor.hdl
+
+/**
+ * Exclusive-or gate:
+ * out = not (a == b)
+ */
+
+CHIP Xor {
+    IN a, b;
+    OUT out;
+
+    //not(x and y) && (x or y)
+    //Using De Morgan's, we get Not(x) or Not(y) && (x or y)
+    // With this in our hands, we have our XOR gate as it will only be true if
+    //x XOR y is true.
+
+    PARTS:
+    Nand(a=a, b=b, out=nandOut);
+    Or(a=a, b=b, out=orOut);
+    And(a=nandOut, b=orOut, out=out);
+
+
+
+
+ 
+    
+}

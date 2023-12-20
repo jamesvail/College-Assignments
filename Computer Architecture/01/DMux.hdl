@@ -1,0 +1,28 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/DMux.hdl
+
+/**
+ * Demultiplexor:
+ * {a, b} = {in, 0} if sel == 0
+ *          {0, in} if sel == 1
+ */
+
+CHIP DMux {
+    IN in, sel;
+    OUT a, b;
+
+    //In the DMUX chip, which I found to be a little easier than the MUX, we have
+    //(x and not(y)) as well as (x and y). The way this chip works is somewhat similar to the Mux as we
+    //have the not(sel) and the two and chips. To get our a output, we need to check if sel is 0.
+    //If it is, our first and chip will have a 1 for b (since sel==0 is {in,0}). No matter if in in 
+    //is 1 or 0, the first and chip will set a to the correct value as we have a=in. This works
+    //vice versa for if sel==1, the first AND chip will set a to 0 ({0, in} if sel == 1) and will 
+    //go down to the second AND chip to set the correct value to b(which is whatever the input was)
+
+    PARTS:
+    Not(in=sel, out=notSel);
+    And(a=in, b=notSel, out=a);
+	And(a=in, b=sel, out=b);
+}

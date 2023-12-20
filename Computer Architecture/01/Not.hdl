@@ -1,0 +1,23 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Not.hdl
+
+/**
+ * Not gate:
+ * out = not in
+ */
+
+CHIP Not {
+    IN in;
+    OUT out;
+
+    //When Nand takes in two inputs, it will always return 1
+    //except for when two 1's are inputed. EX: in 0 would return
+    //1 (two 0's don't get accepted into and, so it is indeed NOT AND)
+    //and if in = 1, NAND gate will return 0 as two 1's get accepted into AND,
+    //therefore denied into NAND, swapping the value like a NOT gate.
+    
+    PARTS:
+    Nand(a=in, b=in, out=out); 
+}

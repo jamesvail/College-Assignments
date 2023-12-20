@@ -1,0 +1,38 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Computer.hdl
+
+/**
+ * The HACK computer, including CPU, ROM and RAM.
+ * When reset is 0, the program stored in the computer's ROM executes.
+ * When reset is 1, the execution of the program restarts. 
+ * Thus, to start a program's execution, reset must be pushed "up" (1)
+ * and "down" (0). From this point onward the user is at the mercy of 
+ * the software. In particular, depending on the program's code, the 
+ * screen may show some output and the user may be able to interact 
+ * with the computer via the keyboard.
+ */
+
+CHIP Computer {
+
+    IN reset;
+
+    PARTS:
+    //"In physical implementations of the Hack platform, the instruction memory can be
+    //implemented as a ROM (Read-Only Memory) chip that is preloaded with the required program."
+    //"When the user asserts the reset input, the CPU’s pc output emits 0,
+    // causing the instruction memory (ROM32K) to emit the first instruction in the program."page 142
+    // first instruction from cpuout written here
+    // "the CPU’s pc output feeds the address input of the instruction memory," page 142
+    // "This output, in turn, feeds the instruction input of the CPU," page 142
+    // this is the whole fetch-execute cycle layed out romOut gets fed into CPU and then CPU outputs
+    // the next instruction, feeding it back to ROM.
+    ROM32K(address=cpuOut, out=romOut);
+    //reset used here for program counter
+    CPU(inM=memOut, instruction=romOut, reset=reset, outM=saveMemory, writeM=writeMemory, addressM=addrMemory, pc=cpuOut)
+    
+    //stores everything in memory, needed for fetch-execute cycle between ROM and CPU.
+    Memory(in=saveMemory, load=writeMemory, address=addrMemory, out=memOut);
+        
+}

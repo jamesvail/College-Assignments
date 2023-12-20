@@ -1,0 +1,26 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Or.hdl
+
+ /**
+ * Or gate:
+ * out = 1 if (a == 1 or b == 1)
+ *       0 otherwise
+ */
+
+CHIP Or {
+    IN a, b;
+    OUT out;
+    //While there is double negation going on, there are 3
+    //not's included in this OR chip. (perhaps could have been done easier)
+    //Since a NAND chip is going to basically be our OR chip, we need to add in 
+    //two not's to complete this, and this will end up being double negation and
+    //also De Morgan's Law. Not(Not(x) and Not(y))
+    //this boils down to x or y using double negation and De Morgan's law
+
+    PARTS:
+    Not(in=a, out=notA);
+    Not(in=b, out=notB);
+    Nand(a=notA, b=notB, out=out);
+}

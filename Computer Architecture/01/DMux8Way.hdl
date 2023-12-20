@@ -1,0 +1,31 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/DMux8Way.hdl
+
+/**
+ * 8-way demultiplexor:
+ * {a, b, c, d, e, f, g, h} = {in, 0, 0, 0, 0, 0, 0, 0} if sel == 000
+ *                            {0, in, 0, 0, 0, 0, 0, 0} if sel == 001
+ *                            etc.
+ *                            {0, 0, 0, 0, 0, 0, 0, in} if sel == 111
+ */
+
+CHIP DMux8Way {
+    IN in, sel[3];
+    OUT a, b, c, d, e, f, g, h;
+
+    PARTS:
+
+    //With DMux4Way, we can input 4 bit values (a,b,c,d or e,f,g,h) along with 2 bit sel values.
+    //While this is a little bit of a problem since we have a 3bit sel value, I found out that
+    //if we use a DMux chip first, we can check the last bit of the sel value while giving us two outputs.
+
+    DMux(in=in, sel=sel[2], a=DM1,b=DM2);
+
+    //We can use these two outputs in 2 DMux4Way chips (since it takes in 4 bit values), checking the first and second values 
+    //of sel (since this chip takes in 2 bit sel values) therefore setting all 8 values with very minimal code.
+
+	DMux4Way(in=DM1, sel=sel[0..1], a=a, b=b,c=c, d=d);
+	DMux4Way(in=DM2, sel=sel[0..1], a=e, b=f, c=g, d=h);
+}

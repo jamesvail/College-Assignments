@@ -1,0 +1,35 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/FullAdder.hdl
+
+/**
+ * Computes the sum of three bits.
+ */
+
+CHIP FullAdder {
+    IN a, b, c;  // 1-bit inputs
+    OUT sum,     // Right bit of a + b + c
+        carry;   // Left bit of a + b + c
+
+    PARTS:
+    
+    //Very similar to HalfAdder, except for when all a, b, and c are 1, sum and carry
+    //are both a 1. Likewise, 2 bits (EX: a and b) will still make carry a 1 just like 
+    //one bit (only a as 1) makes the sum 1.
+    //
+    //I knew I could do this with a bunch of ands (and a xor for the carry output)
+    //but I decided to utilize the HalfAdder chip. The first half adder chips handles our first
+    //2 bits (a and b) while creating two wires for our outputs (carry1 and sum1)
+    //
+    //The second halfadder serves to check our third bit (c). We use the wire sum1 as well for B
+    //since we need to confirm the output of our first halfadder 
+    //(EX: if sum1 was 1, that means either a or b was 1, so if c was 1 we would set our sum to 0 in halfadder2 )
+    //Just like in halfadder, we use Xor to set our carry output with two wires from the 2 half adders.
+    //If a, b, and c are all 1, carry1 would be 1, and carry2 would be 0, making Xor output 1 as the carry.
+    //just to clarify, carry2 is 0 since HalfAdder2 takes in a=1, and b=0 since HalfAdder1 makes sum1 a 0.
+
+    HalfAdder(a=a, b=b, sum=sum1, carry=carry1); //sum1 = 0, carry1 = 1
+    HalfAdder(a=c, b=sum1, sum=sum, carry=carry2); //sum = 1, carry2 = 0
+    Xor(a=carry1, b=carry2, out=carry); //out=1
+}

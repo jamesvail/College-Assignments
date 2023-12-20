@@ -1,0 +1,33 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux.hdl
+
+/** 
+ * Multiplexor:
+ * out = a if sel == 0
+ *         else b 
+ */
+
+CHIP Mux {
+    IN a, b, sel;
+    OUT out;
+
+    //(x && Not(sel)) OR (y && sel)
+    //With some distributive property, we use a not, two and chips, and finally
+    //an or chip to create our mux. With our sel and not sel, we incorporate these
+    //into our two and chips. One of these AND chips will always have a positive value
+    //for sel. When sel == 0, andOut1 will have a positive b value, so if a is 0, the andOut1 wire
+    // will be 0 (which a = 0) and if a=1, andOut1 will be 1. This goes the same for the andOut2 wire.
+    // The OR chip will always only return 1 value since we incorporated the not chip with the sel value.
+    //
+    //Special note, hopefully you get a laugh out of it, I was stuck on this chip for 30 minutes until I realized I had the 
+    //sel and Not(sel) values flipped for the andOut1 and andOut2 wires....
+
+    PARTS:
+    Not(in=sel, out=notSel);
+    And(a=a, b=notSel, out=andOut1);
+    And(a=b, b=sel, out=andOut2);
+    Or(a=andOut1, b=andOut2, out=out);
+    
+}

@@ -1,0 +1,33 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux4Way16.hdl
+
+/**
+ * 4-way 16-bit multiplexor:
+ * out = a if sel == 00
+ *       b if sel == 01
+ *       c if sel == 10
+ *       d if sel == 11
+ */
+
+CHIP Mux4Way16 {
+    IN a[16], b[16], c[16], d[16], sel[2];
+    OUT out[16];
+
+    //With the Mux16 chip already down, and the Dmux4way chip done, I realized that I could flip the DMux4way chip
+    // (as they are the opposite) and incororate the previous Mux16 chip. 
+
+    PARTS:
+    //With the swap, we have the first two chips checking the first bit of the sel. Similar to a XOR chip,
+    //We create two wires M1out and M2out (checking a through d values in the process).
+    
+    Mux16(a=a, b=b, sel=sel[0], out=M1out);
+    Mux16(a=c, b=d, sel=sel[0], out=M2out);
+
+    //With the explanation being the opposite of the DMux chip, we check the second bit of sel in our last chips
+    // and send out a singular value depending on the value of sel. We can get away with only checking the value of 
+    //sel's second bit once since we use the wires M1out and M2out. 
+    
+    Mux16(a=M1out, b=M2out, sel=sel[1], out=out);
+}

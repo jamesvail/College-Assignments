@@ -1,0 +1,73 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Memory.hdl
+
+/**
+ * The complete address space of the Hack computer's memory,
+ * including RAM and memory-mapped I/O. 
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = Memory[address(t)](t)
+ *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load==1, the in value is loaded 
+ * into the memory location specified by address. This value becomes 
+ * available through the out output from the next time step onward.
+ * Address space rules:
+ * Only the upper 16K+8K+1 words of the Memory chip are used. 
+ * Access to address>0x6000 is invalid. Access to any address in 
+ * the range 0x4000-0x5FFF results in accessing the screen memory 
+ * map. Access to address 0x6000 results in accessing the keyboard 
+ * memory map. The behavior in these addresses is described in the 
+ * Screen and Keyboard chip specifications given in the book.
+ */
+
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+
+    // Screen hexa = (4000 - 5FFF)
+    // Screen binary = 0100 0000 0000 0000 (16384) - 0101 1111 1111 1111 (24575)
+
+    // keyboard hexa = 6000
+    // keyboard binary = 0100 0000 0000 0000 (16384)
+
+    // ram hexa = 0000 - 3FFF
+    // ram binary = 0000 0000 0000 0000 (0) - 0011 1111 1111 1111 (16383)
+
+    // when the 14th bit in address is 0, we know the load goes to the RAM chip (proof above)
+    // when the 14th bit in address is a 1, we now know its either keyboard or screen
+    // however, if the 14th bit is 1 and the 12th bit is 1, we know its screen.
+
+    //"The Hack platform can be connected to two peripheral devices: a screen and a keyboard." (pg 134)
+
+    //"In the Hack computer platform, the screen memory map and the keyboard memory map are realized by
+    // two built-in chips named Screen and Keyboard." (pg 134)
+
+    //"The Memory chip of the Hack computer is an aggregate of three chip-parts: RAM16K, Screen, and Keyboard." (page 141)
+
+    //"Hack's machine language programs see a single address space, ranging from address 0 to address 24576
+    //(in hexadecimal: 6000)." (page142)
+
+    //this comment below is for my initial attempt.
+    //didn't include keyboard as we only need 3 possible selections, as well as keyboard is a constant out with no load required.
+    // AKA only gets read.
+    //DMux(in=load, sel=address[13], a=ramLoad, b=screenLoad); //<- initial attempt
+    DMux4Way(in=load, sel=address[13..14], a=ramA, b=ramB, c=screenLoad, d=null);
+    Or(a=ramA, b=ramB, out=ramLoad);
+    // "If load == 1, the value is set to in. Screen takes in address[13]" page 135
+    Screen(in=in, load=screenLoad, address=address[0..12], out=screenOut);
+    //constant out, will only output if selected in mux4way16.
+    Keyboard(out=keyOut);
+    // ram takes in 14 bits unlike screen. ram consumes bit [13] as a sort of 'sel'
+    RAM16K(in=in, load=ramLoad, address=address[0..13], out=ramOut);
+    //when last 2 bits of address are;
+    // 00 -> ram binary = (00)00 0000 0000 0000 - (00)11 1111 1111 1111
+    // 01 -> consumed by RAM, most significant
+    // 10 -> Screen binary = 0100 0000 0000 0000 (16384) - 0101 1111 1111 1111 (24575)
+    // 11 -> keyboard binary = 0100 0000 0000 0000 (16384)
+    Mux4Way16(a=ramOut, b=ramOut, c=screenOut, d=keyOut, sel=address[13..14], out=out);
+}   
+

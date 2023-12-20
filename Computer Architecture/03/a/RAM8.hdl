@@ -1,0 +1,53 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/RAM8.hdl
+
+/**
+ * Memory of 8 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM8 {
+    IN in[16], load, address[3];
+    OUT out[16];
+
+    PARTS:
+    
+    //"A RAM8 chip features 8 registers, as shown in figure 3.7, for. Each
+    //register can be selected by setting the RAM8’s 3-bit address input to a value between 0 and 7." (Page 91)
+    //The textbook let mw know that we will indeed need 8 registers. If we have 8 registers, we need to
+    //load 8 values (one for each register).
+
+  
+    //"The 16-bit in data can be fed simultaneously to the in inputs of all eight Register chips. Using another 
+    //combinational chip developed in project 1, along with the address and load inputs, you can ensure that only
+    // one of the registers will accept the incoming in value, while all the other seven registers will ignore it." (Page 91)
+    // Taking the address and load value, we can successfully get 8 load values from our DMux8Way chip from project 1. 
+    // The nice thing about using our DMux8Way chip is so we can accept the incoming in value whilst letting the other 7
+    // registers ignore it. 
+
+    //First need to break up the input in order to be loaded into 8 registers.
+    //DMux8Way takes in 3 bit sel.
+    DMux8Way(in=load, sel=address, a=d1, b=d2, c=d3, d=d4, e=d5, f=d6, g=d7, h=d8);
+
+    //Since Register.hdl takes in 16 bit IN as well as a load input, we can use DMux output 
+    //Need 8 registers to make up an 8 RAM chip
+    
+    Register(in=in, load=d1, out=r1);
+    Register(in=in, load=d2, out=r2);
+    Register(in=in, load=d3, out=r3);
+    Register(in=in, load=d4, out=r4);
+    Register(in=in, load=d5, out=r5);
+    Register(in=in, load=d6, out=r6);
+    Register(in=in, load=d7, out=r7);
+    Register(in=in, load=d8, out=r8);
+
+    //Output is only 1 16 bit output
+    //Since we used our combinational DMux8Way chip to load our registers, we need to combine
+    //our register outputs into one output using our Mux8Way16
+    Mux8Way16(a=r1, b=r2, c=r3, d=r4, e=r5, f=r6, g=r7, h=r8, sel=address, out=out);
+
+}

@@ -1,0 +1,51 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/b/RAM16K.hdl
+
+/**
+ * Memory of 16K registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM16K {
+    IN in[16], load, address[14];
+    OUT out[16];
+
+    //Textbook page 92 on hierarchical scheme.
+    //"This hierarchical addressing scheme can be effected by gate logic. The same implementation idea
+    // can guide the implementation of the remaining RAM512, RAM4K, and RAM16K chips."
+    // While the textbook explains to us the RAM chips will have simular code, the RAM16k chip is different.
+    //With the same math used for the previous registers, we do RAM16k / RAM4k which equals 4, not 8.
+    //This changes the amount of RAM chips needed as well as the way our multiplexers work.
+
+    // Since we have a RAM4k chip, we dont need to implement 32 RAM512 chips. Instead of a DMux8Way, we use a DMux4Way
+    // Which works the same way, just outputs 4 values from our load. Address logic stays the same (last 3 bits choose which RAM chip)
+    // Just like we change our DMux8Way to a 4Way, we change our Mux8Way16 to a Mux4Way 16 as we only have 4 outputted values
+    // from our RAM chips.
+
+    // The way the RAM16K chips choose a particular register is the same logic as before. We use the first bits (xxxxxxx..)
+    // The way the RAM4k chips choose a specific register inside its own chip implementation comes from our sel value from
+    // DMux4Way, the last 3 bits of address (yyy)
+
+    // "we take an aggregate of an unlimited number of registers, and impose on it a combinational superstructure that permits
+    // direct access to any individual register." (page 92 of textbook)
+    // We can reach any individual register thanks to the way we break up our addresses, allowing us to impose even more RAM Chips
+    // if need be.
+
+    PARTS:
+    //We only need 4 values stored into RAM CHIPS as we can use 4 RAM4K chips.
+    DMux4Way(in=load, sel=address[12..13], a=d1, b=d2, c=d3, d=d4);
+
+    //16/4 = 4, so 4 RAM4K chips.
+    
+    RAM4K(in=in, load=d1, address=address[0..11], out=r1 );
+    RAM4K(in=in, load=d2, address=address[0..11], out=r2 );
+    RAM4K(in=in, load=d3, address=address[0..11], out=r3 );
+    RAM4K(in=in, load=d4, address=address[0..11], out=r4 );
+
+    //Output stored values
+    Mux4Way16(a=r1, b=r2, c=r3, d=r4, sel=address[12..13], out=out);
+}

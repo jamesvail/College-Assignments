@@ -1,0 +1,39 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux8Way16.hdl
+
+/**
+ * 8-way 16-bit multiplexor:
+ * out = a if sel == 000
+ *       b if sel == 001
+ *       etc.
+ *       h if sel == 111
+ */
+
+CHIP Mux8Way16 {
+    IN a[16], b[16], c[16], d[16],
+       e[16], f[16], g[16], h[16],
+       sel[3];
+    OUT out[16];
+
+    //Just like I flipped the code for DMux4Way and Mux4Way16, I realized I could do the same with 
+    //DMux8Way. This code is pretty much almost identical to the Mux4Way16, except that we have 8 possible out values
+    //and, in turn, a 3 bit sel value to sort through them. With the same exact structure as Mux4Way16, we can use that same chip to 
+    //sort through and compare all input values to the first two sel values and finally use a Mux16 to compare the two wires to the last bit of sel.
+
+    PARTS:
+
+    Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[0..1], out=M1);
+    Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[0..1], out=M2);
+    Mux16(a=M1, b=M2, sel=sel[2], out=out);
+}
+
+//FLIP THIS WITH MUX
+//DMux(in=in, sel=sel[2], a=DM1,b=DM2);
+//	DMux4Way(in=DM1, sel=sel[0..1], a=a, b=b,c=c, d=d);
+//	DMux4Way(in=DM2, sel=sel[0..1], a=e, b=f, c=g, d=h);
+
+
+
+

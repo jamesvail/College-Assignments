@@ -1,0 +1,118 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/ALU.hdl
+
+/**
+ * The ALU (Arithmetic Logic Unit).
+ * Computes one of the following functions:
+ * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
+ * x+1, y+1, x-1, y-1, x&y, x|y on two 16-bit inputs, 
+ * according to 6 input bits denoted zx,nx,zy,ny,f,no.
+ * In addition, the ALU computes two 1-bit outputs:
+ * if the ALU output == 0, zr is set to 1; otherwise zr is set to 0;
+ * if the ALU output < 0, ng is set to 1; otherwise ng is set to 0.
+ */
+
+// Implementation: the ALU logic manipulates the x and y inputs
+// and operates on the resulting values, as follows:
+// if (zx == 1) set x = 0        // 16-bit constant DONE
+// if (nx == 1) set x = !x       // bitwise not DONE
+// if (zy == 1) set y = 0        // 16-bit constant DONE
+// if (ny == 1) set y = !y       // bitwise not DONE
+// if (f == 1)  set out = x + y  // integer 2's complement addition DONE
+// if (f == 0)  set out = x & y  // bitwise and DONE
+// if (no == 1) set out = !out   // bitwise not DONE
+// if (out == 0) set zr = 1 // DONE
+// if (out < 0) set ng = 1 // DONE
+
+CHIP ALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute out = x + y (if 1) or x & y (if 0)
+        no; // negate the out output?
+
+    OUT 
+        out[16], // 16-bit output
+        zr, // 1 if (out == 0), 0 otherwise
+        ng; // 1 if (out < 0),  0 otherwise
+
+    PARTS:
+    //**********************ZERO FLAGS**********************
+
+    //ZX mux flag
+    //if (zx==1) set x = 0
+    Mux16(a=x, b=false, sel=zx, out=muxZX); 
+
+    //ZY mux flag
+    //if (zy == 1) set y = 0  
+    Mux16(a=y, b=false, sel=zy, out=muxZY); 
+
+    //**********************NEGATE FLAGS**********************
+
+    //Create two wires; need these for our final bitwise nots
+    Not16(in=muxZX, out=notX);  //NX flag
+    Not16(in=muxZY, out=notY); //NY flag
+
+    //MUX the not's, sel's are nx and ny
+
+    //if (nx == 1) set x = !x 
+    Mux16(a=muxZX, b=notX, sel=nx, out=midX);
+    //if (ny == 1) set y = !y
+    Mux16(a=muxZY, b=notY, sel=ny, out=midY);
+
+    //**********************F BIT**********************
+
+    // and16 and add16 will be exact same for our mux.
+
+    //if (f == 1)  set out = x + y
+    Add16(a=midX, b= midY, out=addO);
+    //if (f == 0)  set out = x & y 
+    And16(a=midX, b=midY, out=andO);
+
+    // if f is 1 then x+y, so we put our add in the b value.
+    //Out wire is fcontrol so we can use it to negate out
+    //This wire will also be used for out ng flag and the start of our ZR.
+    Mux16(a=andO, b=addO, sel=f, out=fControl);
+
+    //**********************NEGATING OUT**********************
+    //Also handling our NG flag and making preparations for our ZR flag handling.
+
+
+    //With our negate flag outputs (midX and midY) we mux them with sel as f
+    //after performing our AND and ADD operations. 
+    //With our fcontrol out wire, we mux it with our same negated fcontrol wire.
+    //Mux16(a=fControl, b=notF, sel=no, out=midOut);
+    //EDIT: after reading Appendix a, realized we can handle our ng and zr flags with mux.
+    //Mux16(a=fControl, b=notF, sel=no, out=out, out[15]=ng);
+    //EDIT EDIT: I didn't think it prudent to create an or16way, so I found out that I can add
+    //2 more outputs to our Mux16 chip to break our zr flag up into 2 sets of 8 bits so an
+    //oR8Way can handle it.
+
+    //if (no == 1) set out = !out
+    Not16(in=fControl, out=notF);
+    //if (out < 0) set ng = 1
+    Mux16(a=fControl, b=notF, sel=no, out[0..7]=low, out[8..15]=high, out=out, out[15]=ng);
+
+    //**********************ZR FLAG**********************
+
+    //Since we broke up our muxOut (basically mid out) into two pieces,
+    //We can use 2 Or8Way's and finally combine them with an Or.
+    Or8Way(in=low, out=zrOne);
+    Or8Way(in=high, out=zrTwo);
+
+    //Forgot we had to finally negate this or statement before returning it
+    //to the out value of ZR.
+    
+    //if (out == 0) set zr = 1 
+    Or(a=zrOne, b=zrTwo, out=zrThree); 
+    Not(in=zrThree, out=zr);
+
+
+
+
+}

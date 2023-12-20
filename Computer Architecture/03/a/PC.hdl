@@ -1,0 +1,75 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/PC.hdl
+
+/**
+ * A 16-bit counter with load and reset control bits.
+ * if      (reset[t] == 1) out[t+1] = 0
+ * else if (load[t] == 1)  out[t+1] = in[t]
+ * else if (inc[t] == 1)   out[t+1] = out[t] + 1  (integer addition)
+ * else                    out[t+1] = out[t]
+ */
+
+CHIP PC {
+    IN in[16],load,inc,reset;
+    OUT out[16];
+
+    // Our register chip is used to hold the input value under certain conditions.
+    // We can use it to hold the input when reset[t] == 1.
+    // We have to implement our Inc16 chip in order to save a value to a wire that
+    // increments our current value. We use 3 Mux16's in our program in order to 
+    // correctly conform to the boolean logic of the chip. 
+    // Source, page 92:
+    // "The basic storage and counting functionalities of the counter can be implemented,
+    // respectively, by a Register chip and by the incrementer chip built in project 2."
+
+    // We need one Mux16 to select between our current
+    // sel1 = b, sel0 = a
+    // register value (rOut) and our saved incremented value (regInc). If our sel value (inc) is indeed 1,
+    // we choose our incremented value as our output. Otherwise, we keep our rOut.
+
+    // Our second Mux16 chip helps us choose between our previous mux out (incCheck) and also our in value.
+    // The reason we need this Mux16 chip is to determine whether or not we need to load our input value.
+
+    //Our final Mux16 is essentialy our reset check. If reset == 0, we input this value into our sel
+    //and then output our b value, which is false since we don't need to reset our out[t+1]. Vice versa, if
+    // reset == 1, we output our loadCheck wire from our second Mux16 and we end up using it in our register
+    // to set our final output. 
+
+    // While the register chip is implemented first, we essentially first check our Mux16's to figure out
+    // what to do with our next clock cycle output. AKA whether or not to increment it, load it, or reset it.
+
+    //Source, page 92:
+    // "The logic that selects between the counter’s inc, load, and reset modes can be implemented using some
+    // of the multiplexers built in project 1."
+
+
+    PARTS:
+    //Since our register is 16 bit, we can use it to hold our input.
+    // Our in value will come from our final IF RESET = 1
+    Register(in=resetCheck, load=true, out=rOut, out=out);
+
+    // else if (inc[t] == 1)
+    //Make an increment value in case inc == 1
+    Inc16(in=rOut, out=regInc);
+
+    // else if (inc[t] == 1)   out[t+1] = out[t] + 1
+    // TRANSLATION: if Inc is true, then we increment, else, out[t+1] = out[t], AKA same
+    Mux16(a=rOut, b=regInc, sel=inc, out=incCheck);
+
+    // else if (load[t] == 1)  out[t+1] = in[t]
+    // Just like our increment check, we use load as our sel to see if 
+    // we need to load our value.
+    Mux16(a=incCheck, b=in, sel=load, out=loadCheck);
+
+    // Just like our increment check, we use reset as our sel to see if 
+    // we need to reset our value. This will give us our register input.
+    Mux16(a=loadCheck, b=false, sel=reset, out=resetCheck);
+
+
+
+
+
+
+}

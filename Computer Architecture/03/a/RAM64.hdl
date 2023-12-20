@@ -1,0 +1,50 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/RAM64.hdl
+
+/**
+ * Memory of 64 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM64 {
+    IN in[16], load, address[6];
+    OUT out[16];
+
+    // The textbook, on page 92, states:
+    // "The implementation can be based on eight RAM8 chip-parts." (Talking about the RAM64 chip)
+    // Just like the RAM8 chip, the textbook lets me know that I can implement this chip the
+    // same way, by using 8 RAM8 chips. While I already thought of it, RAM64/RAM8 = 8, so
+    // I realized I needed the same multiplexers to load 8 RAM8 Chips. 
+
+    //SOURCE:
+    // "To select a particular register from the RAM64 memory, we use a 6-bit address, say xxxyyy.
+    // The xxx bits can be used to select one of the RAM8 chips, and the yyy bits can be used to
+    // select one of the registers within the selected RAM8." (Page 92)
+    // With the same xxxyyy address scheme the textbook gave us, I realized we can use the first 3
+    // bits of the address 'yyy' to select a register inside of the RAM 8 chip. The first 3 bits
+    // 'xxx' is used in our DMUX and MUX to select a particular RAM8 chip implemented below.
+    
+    //This chip can also be implemented using 64 Register chips, but the project description
+    //advised against that, not to mention how unefficient it would be.
+
+    PARTS:
+    //DMux8Way takes in 3 bit sel, yyy (last 3 bits)
+    DMux8Way(in=load,sel=address[3..5], a=d1, b=d2, c=d3, d=d4, e=d5, f=d6, g=d7, h=d8);
+
+    //64/8 = 8, so 8 RAM8 chips. Adress is xxx.
+    RAM8(in=in, load=d1, address=address[0..2], out=r1);
+    RAM8(in=in, load=d2, address=address[0..2], out=r2);
+    RAM8(in=in, load=d3, address=address[0..2], out=r3);
+    RAM8(in=in, load=d4, address=address[0..2], out=r4);
+    RAM8(in=in, load=d5, address=address[0..2], out=r5);
+    RAM8(in=in, load=d6, address=address[0..2], out=r6);
+    RAM8(in=in, load=d7, address=address[0..2], out=r7);
+    RAM8(in=in, load=d8, address=address[0..2], out=r8);
+
+    //3 bit sel, yyy (last 3 bits)
+    Mux8Way16(a=r1, b=r2, c=r3, d=r4, e=r5, f=r6, g=r7, h=r8, sel=address[3..5], out=out);
+}
